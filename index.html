@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>African Trade Dashboard</title>
+    
+    <!-- Security and SEO Meta Tags -->
+    <meta name="description" content="Interactive dashboard visualizing intra-African trade flows, statistics, and economic indicators">
+    <meta name="keywords" content="African trade, intra-African commerce, trade statistics, economic data, trade visualization">
+    <meta name="author" content="African Trade Dashboard">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data: https:;
+        connect-src 'self' https://comtradeapi.un.org https://api.worldbank.org https://unctadstat-api.unctad.org https://raw.githubusercontent.com;
+        font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    
+    <!-- Preconnect to external APIs for performance -->
+    <link rel="preconnect" href="https://comtradeapi.un.org">
+    <link rel="preconnect" href="https://api.worldbank.org">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    
+    <!-- Favicon and App Icons -->
+    <link rel="icon" type="image/x-icon" href="assets/icons/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+    
+    <!-- Open Graph Meta Tags for Social Sharing -->
+    <meta property="og:title" content="African Trade Dashboard">
+    <meta property="og:description" content="Interactive visualization of intra-African trade flows and economic indicators">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="">
+    <meta property="og:image" content="assets/icons/og-image.png">
+</head>
+<body>
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header" role="banner">
+            <div class="header-content">
+                <h1 class="dashboard-title">African Trade Dashboard</h1>
+                <div class="time-controls" role="group" aria-label="Year selection controls">
+                    <label for="year-slider">Year:</label>
+                    <input 
+                        type="range" 
+                        id="year-slider" 
+                        class="year-slider"
+                        min="2010" 
+                        max="2023" 
+                        value="2023" 
+                        step="1"
+                        aria-label="Select year for trade data visualization"
+                        aria-describedby="current-year"
+                    >
+                    <span id="current-year" class="year-display" aria-live="polite">2023</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main id="main-content" class="dashboard-grid" role="main">
+            <!-- KPI Panel -->
+            <section class="kpi-panel" aria-labelledby="kpi-header">
+                <div class="kpi-header">
+                    <h2 id="kpi-header">Key Performance Indicators</h2>
+                </div>
+                <div class="kpi-grid" role="group" aria-label="Trade statistics">
+                    <div class="kpi-card" id="intra-trade-percentage" tabindex="0" role="button" aria-describedby="intra-trade-desc">
+                        <div class="kpi-value" aria-live="polite">--</div>
+                        <div class="kpi-label">Intra-African Trade %</div>
+                        <div class="kpi-trend" aria-live="polite"></div>
+                        <div id="intra-trade-desc" class="sr-only">Percentage of total African trade that occurs between African countries</div>
+                    </div>
+                    <div class="kpi-card" id="total-trade-value" tabindex="0" role="button" aria-describedby="total-trade-desc">
+                        <div class="kpi-value" aria-live="polite">--</div>
+                        <div class="kpi-label">Total Trade Value</div>
+                        <div class="kpi-trend" aria-live="polite"></div>
+                        <div id="total-trade-desc" class="sr-only">Total monetary value of intra-African trade</div>
+                    </div>
+                    <div class="kpi-card" id="yoy-growth" tabindex="0" role="button" aria-describedby="yoy-growth-desc">
+                        <div class="kpi-value" aria-live="polite">--</div>
+                        <div class="kpi-label">YoY Growth Rate</div>
+                        <div class="kpi-trend" aria-live="polite"></div>
+                        <div id="yoy-growth-desc" class="sr-only">Year-over-year growth rate of intra-African trade</div>
+                    </div>
+                    <div class="kpi-card" id="active-routes" tabindex="0" role="button" aria-describedby="active-routes-desc">
+                        <div class="kpi-value" aria-live="polite">--</div>
+                        <div class="kpi-label">Active Trade Routes</div>
+                        <div class="kpi-trend" aria-live="polite"></div>
+                        <div id="active-routes-desc" class="sr-only">Number of active bilateral trade routes between African countries</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interactive Map -->
+            <section class="map-panel" aria-labelledby="map-header">
+                <div class="panel-header">
+                    <h2 id="map-header">Interactive Trade Flow Map</h2>
+                    <div class="map-controls" role="group" aria-label="Map control buttons">
+                        <button 
+                            id="reset-map" 
+                            class="control-btn"
+                            type="button"
+                            aria-label="Reset map view to default position and zoom"
+                        >
+                            Reset View
+                        </button>
+                        <button 
+                            id="toggle-flows" 
+                            class="control-btn active"
+                            type="button"
+                            aria-label="Toggle visibility of trade flow lines"
+                            aria-pressed="true"
+                        >
+                            Show Flows
+                        </button>
+                    </div>
+                </div>
+                <div class="map-container" role="img" aria-label="Interactive map showing African countries and trade flows">
+                    <svg id="trade-map" class="trade-map" role="img" aria-labelledby="map-title map-desc">
+                        <title id="map-title">African Trade Flow Visualization</title>
+                        <desc id="map-desc">Interactive map displaying trade relationships between African countries with flow lines indicating trade volume and direction</desc>
+                    </svg>
+                    <div id="map-tooltip" class="map-tooltip" role="tooltip" aria-hidden="true"></div>
+                    <div class="map-legend" role="group" aria-label="Map legend">
+                        <h3 class="legend-title sr-only">Trade Volume Legend</h3>
+                        <div class="legend-item">
+                            <div class="legend-color flow-high" aria-hidden="true"></div>
+                            <span>High Volume</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color flow-medium" aria-hidden="true"></div>
+                            <span>Medium Volume</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color flow-low" aria-hidden="true"></div>
+                            <span>Low Volume</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Top Trade Routes -->
+            <section class="routes-panel" aria-labelledby="routes-header">
+                <div class="panel-header">
+                    <h2 id="routes-header">Top Trade Routes</h2>
+                    <div class="routes-controls" role="group" aria-label="Trade route filter controls">
+                        <label for="trade-type-filter" class="sr-only">Filter trade routes by type</label>
+                        <select id="trade-type-filter" class="control-select" aria-describedby="filter-help">
+                            <option value="total">Total Trade</option>
+                            <option value="exports">Exports</option>
+                            <option value="imports">Imports</option>
+                        </select>
+                        <div id="filter-help" class="sr-only">Select the type of trade data to display in the routes list</div>
+                    </div>
+                </div>
+                <div class="routes-list" id="top-routes-list" role="list" aria-label="List of top trade routes between African countries">
+                    <!-- Dynamic content will be inserted here -->
+                    <div class="routes-placeholder" aria-live="polite">Loading trade routes...</div>
+                </div>
+            </section>
+
+            <!-- Data Status Panel -->
+            <section class="status-panel" aria-labelledby="status-header">
+                <div class="panel-header">
+                    <h2 id="status-header">Data Status</h2>
+                </div>
+                <div class="status-content">
+                    <div class="status-item">
+                        <span class="status-label">Last Update:</span>
+                        <span id="last-update" class="status-value" aria-live="polite">--</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Data Source:</span>
+                        <span class="status-value">UN Comtrade API</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Cache Status:</span>
+                        <span id="cache-status" class="status-value" aria-live="polite">--</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Connection:</span>
+                        <span id="connection-status" class="status-value" aria-live="polite">Checking...</span>
+                    </div>
+                    <div class="status-actions" role="group" aria-label="Data management actions">
+                        <button 
+                            id="refresh-data" 
+                            class="control-btn"
+                            type="button"
+                            aria-describedby="refresh-help"
+                        >
+                            Refresh Data
+                        </button>
+                        <button 
+                            id="clear-cache" 
+                            class="control-btn secondary"
+                            type="button"
+                            aria-describedby="cache-help"
+                        >
+                            Clear Cache
+                        </button>
+                        <div id="refresh-help" class="sr-only">Refresh trade data from external APIs</div>
+                        <div id="cache-help" class="sr-only">Clear locally stored cache data</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay" role="dialog" aria-modal="true" aria-labelledby="loading-title" aria-hidden="true">
+            <div class="loading-content">
+                <h3 id="loading-title" class="sr-only">Loading Data</h3>
+                <div class="loading-spinner" aria-hidden="true"></div>
+                <div class="loading-text" aria-live="polite">Loading trade data...</div>
+                <div class="loading-progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <div id="progress-text" class="progress-text" aria-live="polite">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Modal -->
+        <div id="error-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="error-title" aria-describedby="error-message" aria-hidden="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="error-title">Error</h3>
+                    <button 
+                        id="close-error" 
+                        class="close-btn"
+                        type="button"
+                        aria-label="Close error dialog"
+                    >
+                        &times;
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="error-message" role="alert">An error occurred while loading data.</p>
+                </div>
+                <div class="modal-footer">
+                    <button 
+                        id="retry-action" 
+                        class="control-btn"
+                        type="button"
+                    >
+                        Retry
+                    </button>
+                    <button 
+                        id="dismiss-error" 
+                        class="control-btn secondary"
+                        type="button"
+                    >
+                        Dismiss
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Notification Template -->
+        <div id="success-notification-template" class="notification-template" style="display: none;">
+            <div class="success-notification" role="alert" aria-live="polite">
+                <span class="notification-icon" aria-hidden="true">✓</span>
+                <span class="notification-message"></span>
+                <button class="notification-close" type="button" aria-label="Close notification">&times;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Region for Screen Reader Announcements -->
+    <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/data-manager.js"></script>
+    <script src="js/map-renderer.js"></script>
+    <script src="js/chart-renderer.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- Service Worker for Offline Functionality (Optional) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
